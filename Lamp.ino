@@ -17,7 +17,7 @@ bool ledState = false;
 bool inBlink  = false;
 bool Jacky    = false;
 bool BRU      = true;
-bool Station  = false;
+//bool Station  = false;
 bool buttonActive = false; 
 uint8_t blinkBrightness = 0;
 uint32_t btnPress, myTimer, fakeTimer = 0;
@@ -28,14 +28,16 @@ void setup(){
   pinMode(Charge, OUTPUT);
   pinMode(BUTT, INPUT);
   pinMode(LED_SH, OUTPUT);
-  
+  pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(Charge, LOW);
-  digitalWrite(LEDO, LOW); 
+  digitalWrite(LED_SH, LOW); 
+  digitalWrite(LED_BUILTIN, LOW);
 }
 
 //-----FUNCTIONS-----//
 void TouchYourButt(){
-  if((digitalRead(BUTT) == HIGH)&(millis() - fakeTimer > 300)){
+  digitalWrite(LED_BUILTIN, LOW);
+  if(digitalRead(BUTT) == HIGH){
     if (!buttonActive){
       buttonActive = true;
       btnPress = millis();
@@ -92,33 +94,35 @@ void LongDick()
 
 void BlinkMode()
 {
-  Station = digitalRead(BUTT);
-  if(millis() - fakeTimer > 100){
-    fakeTimer = millis();
-    if(BRU){
-      blinkBrightness++;
-      if (blinkBrightness >= 255){
-        blinkBrightness = 255;
-        BRU = false;
+  while(digitalRead(BUTT) == LOW){ 
+    if(millis() - fakeTimer > 50){
+      fakeTimer = millis();
+      if(BRU){
+        blinkBrightness++;
+        if (blinkBrightness >= 255){
+          blinkBrightness = 255;
+          BRU = false;
+        }
+      }
+      else{
+        blinkBrightness--;
+        if (blinkBrightness <= 0){
+          blinkBrightness = 0;
+          BRU = true;
+        }
       }
     }
-    else{
-      blinkBrightness--;
-      if (blinkBrightness <= 0){
-        blinkBrightness = 0;
-        BRU = true;
-      }
-    }
-  }
-  analogWrite(LED_SH, blinkBrightness);
+    analogWrite(LED_SH, blinkBrightness);
+  } 
 }
 //----LOOP----//
 void loop(){
   // BASE analogWrite(9, 255);
-  while(!Station){
+ /* while(!Station){
+    digitalWrite(LED_BUILTIN, HIGH);
     Station = digitalRead(BUTT);
     fakeTimer = millis();
-  }
+  }*/
   TouchYourButt();
   switch(currency){
     case LED_NF:
@@ -128,10 +132,7 @@ void loop(){
       digitalWrite(Charge, inCharge);
       break;
     case Blink:
-      Station = false; 
-      while(!Station){
-        BlinkMode();
-      }
+      BlinkMode();
       break;
   }
 }
